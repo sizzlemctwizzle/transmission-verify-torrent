@@ -32,7 +32,7 @@ int parseStatus(FILE * fp, int tid, char * statusOut)
     exit(EXIT_FAILURE);
   }
 
-  while (lid != tid && fgets(line, LINE_LEN, fp))
+  if (fgets(line, LINE_LEN, fp))
   {
     /* This line keeps throwing a crazy gcc warning for me */
     sscanf(line, "%d %d", &lid, &done);
@@ -60,6 +60,9 @@ int checkStatus(int tid, char * status)
   int fd[2];
   int done = 0;
   pid_t pid;
+  char tidStr[BUF_LEN];
+
+  snprintf(tidStr, BUF_LEN, "-t%d", tid);
 
   /* 
      Set up a pipe to redirect the stdout of the child process
@@ -70,7 +73,7 @@ int checkStatus(int tid, char * status)
 
   if (pid == 0) {
     dup2(fd[1], STDOUT_FILENO);
-    execlp("transmission-remote", "transmission-remote", "-l", NULL);
+    execlp("transmission-remote", "transmission-remote", tidStr, "-l", NULL);
   }
   else {
     FILE * fp = NULL;
