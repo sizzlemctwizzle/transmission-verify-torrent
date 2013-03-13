@@ -7,6 +7,8 @@
 
 #define LINE_LEN 4096
 #define BUF_LEN  512
+#define ARGS_NUM 16
+#define ARG_LEN  128
 
 /*
    Parse the output of "transmission-remote -l" to get
@@ -55,14 +57,42 @@ int parseStatus(FILE * fp, int tid, char * statusOut)
   return done;
 }
 
-int checkStatus(int tid, char * status)
+/* Build the arguments array required for execvp */
+char ** buildArgsArr(char * transStr, int tid)
+{
+  /* Since everything is static this only runs once */
+  static char args[ARGS_NUM][ARG_LEN] = {{0}};
+  static char * rval[ARGS_NUM] = {0};
+  static int argi = 0;
+
+  if (argi <= 0)
+  {
+    char * arg = NULL;
+    int cpi;
+    arg = strtok(transStr," ");
+
+    while (arg != NULL && argi < ARGS_NUM - 2)
+    {
+      strcpy(args[(argi++)], arg);
+      arg = strtok (NULL, " ");
+    }
+
+    /* These are the torrent id and list args */
+    snprintf(args[(argi++)], ARG_LEN, "-t%d", tid);
+    strcpy(args[(argi++)], "-l");
+    
+    /* Copy the pointers to the strings */
+    for (cpi = 0; cpi < argi; ++cpi) rval[cpi] = args[cpi];
+  }
+  
+  return rval;
+}
+
+int checkStatus(int tid, char * status, char * transStr)
 {
   int fd[2];
   int done = 0;
   pid_t pid;
-  char tidStr[BUF_LEN];
-
-  snprintf(tidStr, BUF_LEN, "-t%d", tid);
 
   /* 
      Set up a pipe to redirect the stdout of the child process
@@ -73,7 +103,7 @@ int checkStatus(int tid, char * status)
 
   if (pid == 0) {
     dup2(fd[1], STDOUT_FILENO);
-    execlp("transmission-remote", "transmission-remote", tidStr, "-l", NULL);
+    execvp("transmission-remote", buildArgsArr(transStr, tid));
   }
   else {
     FILE * fp = NULL;
@@ -94,13 +124,52 @@ int main(int argc, char *argv[])
   int tid = 0;
   int done = 0;
   char status[BUF_LEN] = "Verifying";
+  char transBuf[BUF_LEN] = "transmission-remote ";
   char cmdBuf[BUF_LEN];
 
-  if (argc != 2)
+  /* Usage: transmission-verify-torrent [host] torrent-id [options] */
+  if (argc < 2)
   {
     exit(EXIT_FAILURE);
   }
-  tid = atoi(argv[1]);
+  else if (argc == 2)
+  {
+    tid = atoi(argv[1]);
+  }
+  else
+  {
+    strcat(transBuf, argv[1]); /* host param */
+    tid = atoi(argv[2]);
+
+    /* options */
+    if (argc > 3)
+    {
+      int i;
+      char * lastOpt = NULL;
+      for (i = 3; i < argc; ++i) /* loop through remaining args */
+      {
+        char * opt = argv[i];
+        if (*(opt++) == '-' && *opt != '\0')
+        {
+          if (!strcmp("ne", opt) || !strcmp("-authenv", opt))
+          {
+            strcat(transBuf, " -ne");
+          }
+          else if (!strcmp("n", opt) || !strcmp("-auth", opt))
+          {
+            strcat(transBuf, " -n");
+            lastOpt = opt;
+          }
+        }
+        else if (lastOpt)
+        {
+          strcat(transBuf, " ");
+          strcat(transBuf, (--opt));
+          lastOpt = NULL;
+        }
+      }
+    }
+  }
 
   if (tid <= 0) 
   {
@@ -108,13 +177,13 @@ int main(int argc, char *argv[])
   }
 
   /* Since we don't need the output of this call, we can be lazy and use a system call */
-  snprintf(cmdBuf, BUF_LEN, "transmission-remote -t %d --verify > /dev/null", tid);
+  snprintf(cmdBuf, BUF_LEN, "%s -t %d --verify > /dev/null", transBuf, tid);
   system(cmdBuf);
 
   /* Keep checking status until verification is done */
-  while (!strcmp(status, "Verifying"))
+  while (!strcmp(status, "Verifying") || !strcmp(status, "Will Verify"))
   {
-    done = checkStatus(tid, status);
+    done = checkStatus(tid, status, transBuf);
     /* Wait half a second between checks */
     nanosleep((struct timespec[]){{0, 500000000}}, NULL);
   }
@@ -122,9 +191,9 @@ int main(int argc, char *argv[])
   /* Make sure the torrent isn't stopped if unfinished */
   if (done < 100)
   {
-    snprintf(cmdBuf, BUF_LEN, "transmission-remote -t %d -s > /dev/null", tid);
+    snprintf(cmdBuf, BUF_LEN, "%s -t %d -s > /dev/null", transBuf, tid);
     system(cmdBuf);
-    checkStatus(tid, status);
+    checkStatus(tid, status, transBuf);
   }
   else
   {
@@ -136,7 +205,7 @@ int main(int argc, char *argv[])
      The only output of this program is the status of the torrent after it 
      has been verified. 
   */
-  printf(status);
+  printf("%s", status);
 
   return 0;
 }

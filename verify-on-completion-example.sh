@@ -3,8 +3,7 @@
 # This script automatically verifies a torrent after
 # it completes. All the heavy lifting is done by 
 # "transmission-verify-torrent", which you need to build
-# and install (make && sudo make install). Ignore the
-# stupid build warnings.
+# and install (make && sudo make install).
 
 # Uncomment for debugging
 # TR_TORRENT_ID=$1
@@ -13,6 +12,11 @@
 # of your transmission completion script.
 
 # Verify torrent data upon completion
+# Usage: transmission-verify-torrent [host] torrent-id [options]
+# Options:
+#   -n   --auth       <user:pw>   Set username and password
+#   -ne  --authenv                Set authentication info from the
+#                                 TR_AUTH environment variable
 status=`transmission-verify-torrent $TR_TORRENT_ID`
 
 # Check if the torrent really is complete
