@@ -1,6 +1,7 @@
 CC=gcc
 LDFLAGS=-Wall
-CFLAGS=-Wall
+SINGLE_TORRENT=0
+CFLAGS=-Wall -D SINGLE_TORRENT=$(SINGLE_TORRENT)
 TARGETS= transmission-verify-torrent
 
 all: ${TARGETS}

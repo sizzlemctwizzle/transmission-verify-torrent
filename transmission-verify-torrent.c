@@ -31,17 +31,31 @@ int parseStatus(FILE * fp, int tid, char * statusOut)
   }
   else
   {
+    /* 
+       If we got a bad response from "transmission-remote -l"
+       then print what ever response we got.
+    */
+    printf("Unable to parse torrent list:\n\n");
+    do
+    {
+        printf("%s\n", line);
+    } while (fgets(line, LINE_LEN, fp));
     exit(EXIT_FAILURE);
   }
 
-  if (fgets(line, LINE_LEN, fp))
+  #if SINGLE_TORRENT
+  if (
+  #else
+  while (lid != tid &&
+  #endif
+    fgets(line, LINE_LEN, fp))
   {
-    /* This line keeps throwing a crazy gcc warning for me */
     sscanf(line, "%d %d", &lid, &done);
   }
 
   if (lid != tid) 
   {
+    printf("Torrent id could not be found\n");
     exit(EXIT_FAILURE);
   }
   
@@ -78,7 +92,9 @@ char ** buildArgsArr(char * transStr, int tid)
     }
 
     /* These are the torrent id and list args */
+    #if SINGLE_TORRENT
     snprintf(args[(argi++)], ARG_LEN, "-t%d", tid);
+    #endif
     strcpy(args[(argi++)], "-l");
     
     /* Copy the pointers to the strings */
@@ -105,7 +121,8 @@ int checkStatus(int tid, char * status, char * transStr)
     dup2(fd[1], STDOUT_FILENO);
     execvp("transmission-remote", buildArgsArr(transStr, tid));
   }
-  else {
+  else
+  {
     FILE * fp = NULL;
     close(fd[1]);
     dup2(fd[0], STDIN_FILENO);
@@ -130,6 +147,7 @@ int main(int argc, char *argv[])
   /* Usage: transmission-verify-torrent [host] torrent-id [options] */
   if (argc < 2)
   {
+    printf("Not enough arguments\n");
     exit(EXIT_FAILURE);
   }
   else if (argc == 2)
@@ -173,6 +191,7 @@ int main(int argc, char *argv[])
 
   if (tid <= 0) 
   {
+    printf("Torrent id is invalid\n");
     exit(EXIT_FAILURE);
   }
 
@@ -202,8 +221,8 @@ int main(int argc, char *argv[])
   }
 
   /* 
-     The only output of this program is the status of the torrent after it 
-     has been verified. 
+     Print the status of the torrent after it 
+     has been verified.
   */
   printf("%s", status);
 
