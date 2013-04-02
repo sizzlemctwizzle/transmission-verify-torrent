@@ -35,10 +35,10 @@ int parseStatus(FILE * fp, int tid, char * statusOut)
        If we got a bad response from "transmission-remote -l"
        then print what ever response we got.
     */
-    printf("Unable to parse torrent list:\n\n");
+    fprintf(stderr, "Unable to parse torrent list:\n\n");
     do
     {
-        printf("%s\n", line);
+        fprintf(stderr, "%s\n", line);
     } while (fgets(line, LINE_LEN, fp));
     exit(EXIT_FAILURE);
   }
@@ -55,7 +55,7 @@ int parseStatus(FILE * fp, int tid, char * statusOut)
 
   if (lid != tid) 
   {
-    printf("Torrent id could not be found\n");
+    fprintf(stderr, "Torrent id could not be found\n");
     exit(EXIT_FAILURE);
   }
   
@@ -147,7 +147,7 @@ int main(int argc, char *argv[])
   /* Usage: transmission-verify-torrent [host] torrent-id [options] */
   if (argc < 2)
   {
-    printf("Not enough arguments\n");
+    fprintf(stderr, "Not enough arguments\n");
     exit(EXIT_FAILURE);
   }
   else if (argc == 2)
@@ -191,7 +191,7 @@ int main(int argc, char *argv[])
 
   if (tid <= 0) 
   {
-    printf("Torrent id is invalid\n");
+    fprintf(stderr, "Torrent id is invalid\n");
     exit(EXIT_FAILURE);
   }
 
@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
   }
 
   /* 
-     Print the status of the torrent after it 
+     The only output of this program is the status of the torrent after it 
      has been verified.
   */
   printf("%s", status);

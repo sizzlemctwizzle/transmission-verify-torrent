@@ -17,13 +17,19 @@
 #   -n   --auth       <user:pw>   Set username and password
 #   -ne  --authenv                Set authentication info from the
 #                                 TR_AUTH environment variable
-status=`transmission-verify-torrent $TR_TORRENT_ID`
+status=`transmission-verify-torrent $TR_TORRENT_ID 2> verify-errors.out`
 
 # Check if the torrent really is complete
-if [ $status != "Complete" ]
+if [ "$status" != "Complete" ]
 then
-    echo "Torrent is not complete."
-    echo "Status is $status."
+    if [ "$status" != "" ]
+    then
+        echo "Torrent is not complete."
+        echo "Status is $status."
+    else
+        echo "transmission-verify-torrent encountered errors:"
+        cat verify-errors.out
+    fi
     exit
 fi
 
