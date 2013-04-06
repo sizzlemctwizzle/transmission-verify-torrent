@@ -5,10 +5,11 @@
 #include <string.h>
 #include <time.h>
 
-#define LINE_LEN 4096
-#define BUF_LEN  512
-#define ARGS_NUM 16
-#define ARG_LEN  128
+#define MILLI_WAIT 500
+#define LINE_LEN   4096
+#define BUF_LEN    512
+#define ARGS_NUM   16
+#define ARG_LEN    128
 
 /*
    Parse the output of "transmission-remote -l" to get
@@ -203,8 +204,8 @@ int main(int argc, char *argv[])
   while (!strcmp(status, "Verifying") || !strcmp(status, "Will Verify"))
   {
     done = checkStatus(tid, status, transBuf);
-    /* Wait half a second between checks */
-    nanosleep((struct timespec[]){{0, 500000000}}, NULL);
+    /* Wait between status checks */
+    nanosleep((struct timespec[]){{0, MILLI_WAIT * 1000000}}, NULL);
   }
 
   /* Make sure the torrent isn't stopped if unfinished */
