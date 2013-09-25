@@ -221,7 +221,7 @@ int main(int argc, char *argv[])
   {
     done = checkStatus(tid, status, transBuf);
     /* Wait between status checks */
-    nanosleep((struct timespec[]){{0, SECS_WAIT * 1000000000}}, NULL);
+    nanosleep((struct timespec[]){{0, (long)SECS_WAIT * 1000000000}}, NULL);
   }
 
   /* Make sure the torrent isn't stopped if unfinished */
