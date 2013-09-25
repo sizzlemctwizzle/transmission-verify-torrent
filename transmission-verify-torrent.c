@@ -5,9 +5,25 @@
 #include <string.h>
 #include <time.h>
 
-#define MILLI_WAIT 500
+/* Macros you can change */
+
+/* 
+   The number of seconds to wait between checking the
+   torrent list. nanosleep is used so this number can be a 
+   decimal (even less than 1).
+*/
+#define SECS_WAIT  5
+
+/* Buffer size for reading lines from the list of torrents */
 #define LINE_LEN   4096
+
+/* Just a general buffer size mainly used to build system() calls */
 #define BUF_LEN    512
+
+/* 
+   Modify the following macros at your own risk
+   These are used to build the arguments array for execvp 
+*/
 #define ARGS_NUM   16
 #define ARG_LEN    128
 
@@ -205,7 +221,7 @@ int main(int argc, char *argv[])
   {
     done = checkStatus(tid, status, transBuf);
     /* Wait between status checks */
-    nanosleep((struct timespec[]){{0, MILLI_WAIT * 1000000}}, NULL);
+    nanosleep((struct timespec[]){{0, SECS_WAIT * 1000000000}}, NULL);
   }
 
   /* Make sure the torrent isn't stopped if unfinished */
