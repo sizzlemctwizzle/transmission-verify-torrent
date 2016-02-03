@@ -18,11 +18,3 @@ To build and install **transmission-verify-torrent**, download the source, cd in
 
     make && sudo make install
 
-It seems the very latest version of Transmission can list info about a single torrent using:
-
-    transmission-remote -t $TR_TORRENT_ID -l
-
-But because this change is still very new, it's not utilized by default in **transmission-verify-torrent**. Instead it searches through the entire list of torrents for the desired torrent. However, if you've verified that the above command lists only the single torrent then you can build to utilize this ability using:
-
-    make SINGLE_TORRENT=1 && sudo make install
-
