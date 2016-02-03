@@ -30,9 +30,11 @@ then
         echo "transmission-verify-torrent encountered errors:"
         cat verify-errors.out
     fi
+    # If the torrent is not complete, exit and this script will be called again on "completion"
     exit
 fi
 
 echo "Torrent is $status."
 
-# Put the rest (if any) of your completion script after this
+# The torrent really is complete now
+# Put the rest of your completion script after this
