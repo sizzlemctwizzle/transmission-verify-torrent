@@ -60,12 +60,7 @@ int parseStatus(FILE * fp, int tid, char * statusOut)
     exit(EXIT_FAILURE);
   }
 
-  #if SINGLE_TORRENT
-  if (
-  #else
-  while (lid != tid &&
-  #endif
-    fgets(line, LINE_LEN, fp))
+  if (fgets(line, LINE_LEN, fp))
   {
     sscanf(line, "%d %d", &lid, &done);
   }
@@ -109,9 +104,7 @@ char ** buildArgsArr(char * transStr, int tid)
     }
 
     /* These are the torrent id and list args */
-    #if SINGLE_TORRENT
     snprintf(args[(argi++)], ARG_LEN, "-t%d", tid);
-    #endif
     strcpy(args[(argi++)], "-l");
     
     /* Copy the pointers to the strings */
